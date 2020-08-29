@@ -2,7 +2,8 @@ import sys
 import mmap
 import numpy as np
 import os
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
 
 IMAGE_SCOPE_SIZE = 800
 
@@ -41,13 +42,17 @@ if __name__ == '__main__':
         m = mmap.mmap(file_in.fileno(), length=(IMAGE_SCOPE_SIZE * rows_N * columns_N) + description_images_bytes, access=mmap.ACCESS_READ)
         images_arr = np.frombuffer(m, np.ubyte, offset=description_images_bytes)
 
+    # Section 1
     columnized_images = np.reshape(images_arr, (IMAGE_SCOPE_SIZE, 784))
 
     # Hint
     # print(np.mean(columnized_images[0]))
 
-    test_set_x = columnized_images[0:N, :]
     training_set_x = columnized_images[N:IMAGE_SCOPE_SIZE, :]
+    training_set_y = label_arr[N:IMAGE_SCOPE_SIZE]
+
+    test_set_x = columnized_images[0 : N, :]
+    test_set_y = label_arr[0 : N]
 
     # Test same image
     # plt.figure(figsize=(8,4))
@@ -67,5 +72,13 @@ if __name__ == '__main__':
     # ax3.imshow(u, cmap='gray')
 
     # plt.show()
+    # for num_component in range(0, 784):
+
+    # Section 2
+    pca = PCA(n_components = D, svd_solver='full')
+    transformed_training_set_x = pca.fit_transform(training_set_x)
+    transformed_test_set_x = pca.transform(test_set_x)
+
+    print(transformed_test_set_x[0])
 
     print("end of main function")
