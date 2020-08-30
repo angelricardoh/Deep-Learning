@@ -2,6 +2,7 @@ import sys
 import mmap
 import numpy as np
 import os
+from os import path
 # import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from numpy import linalg as LA
@@ -43,24 +44,24 @@ if __name__ == '__main__':
     description_label_bytes = 8
     description_images_bytes = 16
 
-    # TODO: Remove this hardcoding and get it from header instead
+    # We should be getting this from header
     rows_N = 28
     columns_N = 28
 
-    label_arr = None
+    if not path.exists(os.path.join(PATH_TO_DATA_DIR, 'train-labels.idx1-ubyte')):
+        print("File train-labels.idx1-ubyte does not exists at PATH_TO_DATA_DIR")
+
+    if not path.exists(os.path.join(PATH_TO_DATA_DIR, 'train-images.idx3-ubyte')):
+        print("File train-images.idx3-ubyte does not exists at PATH_TO_DATA_DIR")   
 
     with open(os.path.join(PATH_TO_DATA_DIR, 'train-labels.idx1-ubyte'), 'r') as file_in:
         size_bytes = os.fstat(file_in.fileno()).st_size
-
-        # TODO VERY IMPORTANT Try to get headers instead of hardcoding
 
         m = mmap.mmap(file_in.fileno(), length=(IMAGE_SCOPE_SIZE) + description_label_bytes, access=mmap.ACCESS_READ)
         label_arr = np.frombuffer(m, np.uint8, offset=description_label_bytes)
 
     with open(os.path.join(PATH_TO_DATA_DIR, 'train-images.idx3-ubyte'), 'r') as file_in:
         size_bytes = os.fstat(file_in.fileno()).st_size
-
-        # TODO VERY IMPORTANT Try to get headers instead of hardcoding
 
         m = mmap.mmap(file_in.fileno(), length=(IMAGE_SCOPE_SIZE * rows_N * columns_N) + description_images_bytes, access=mmap.ACCESS_READ)
         images_arr = np.frombuffer(m, np.ubyte, offset=description_images_bytes)
@@ -111,5 +112,11 @@ if __name__ == '__main__':
     for x in transformed_test_set_x:
         ypred.append(KNN(K, transformed_training_set_x, training_set_y, x))
 
+    output_f = open("2211798052.txt", 'w')
     for index_pred in range(N):
-        print(str(ypred[index_pred]) + " " + str(test_set_y[index_pred]))
+        output_f.write(str(ypred[index_pred]))
+        output_f.write(" ")
+        output_f.write(str(test_set_y[index_pred]))
+        output_f.write('\n') 
+    output_f.close()
+
