@@ -18,11 +18,13 @@ def KNN(k, X, y, x):
     flatten_distances = distances.flatten()
 
     votes = np.zeros(num_classes, dtype=np.float32)
+    neighbors = sorted(flatten_distances)
     classes = y[np.argsort(flatten_distances)][:k]
+    neighbors[0:k] = neighbors
 
-    weights = np.zeros(k, dtype=np.float32)    
+    weights = np.zeros(k, dtype=np.float32)
     for i in range(k):
-        weights[i] = 1 / LA.norm(x - classes[i], 2)
+        weights[i] = 1 / LA.norm(x - neighbors[i], 2)
 
     for n_i in range(k):
         votes[classes[n_i]] += weights[n_i]
