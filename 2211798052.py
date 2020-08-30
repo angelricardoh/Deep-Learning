@@ -7,16 +7,6 @@ from sklearn.decomposition import PCA
 from numpy import linalg as LA
 
 IMAGE_SCOPE_SIZE = 800
-c = 10
-
-def make_weights(k, distances):
-  result = np.zeros(k, dtype=np.float32)
-  sum = 0.0
-  for i in range(k):
-    result[i] += 1.0 / distances[i]
-    sum += result[i]
-  result /= sum
-  return result
 
 def KNN(k, X, y, x):
     N, _ = X.shape
@@ -26,23 +16,16 @@ def KNN(k, X, y, x):
         distances[i] = np.linalg.norm(X[i] - x)
 
     flatten_distances = distances.flatten()
-    sorted_distances = np.argsort(flatten_distances)
 
     votes = np.zeros(num_classes, dtype=np.float32)
     classes = y[np.argsort(flatten_distances)][:k]
 
-    k_near_dists = np.zeros(k, dtype=np.float32)    
+    weights = np.zeros(k, dtype=np.float32)    
     for i in range(k):
-        idx = sorted_distances[i]
-        print("distance = %0.4f" % distances[idx])
-        k_near_dists[i] = distances[idx] # save dists
-        # k_near_dists[i] = np.power(distances[idx] - classes[i], 2)
-        # k_near_dists[i] = LA.norm(x - classes[i], 2)
+        weights[i] = 1 / LA.norm(x - classes[i], 2)
 
-    wts = make_weights(k, k_near_dists)
-
-    for c in np.unique(classes):
-        votes[c] = wts[i] * 1.0
+    for n_i in range(k):
+        votes[classes[n_i]] += weights[n_i]
 
     return np.argmax(votes)
 
@@ -58,7 +41,7 @@ if __name__ == '__main__':
     description_label_bytes = 8
     description_images_bytes = 16
 
-    # TODO: Remove this
+    # TODO: Remove this hardcoding and get it from header instead
     rows_N = 28
     columns_N = 28
 
@@ -86,8 +69,8 @@ if __name__ == '__main__':
     # Hint
     # print(np.mean(columnized_images[0]))
 
-    training_set_x = columnized_images[N:IMAGE_SCOPE_SIZE, :]
-    training_set_y = label_arr[N:IMAGE_SCOPE_SIZE]
+    training_set_x = columnized_images[N : IMAGE_SCOPE_SIZE, :]
+    training_set_y = label_arr[N : IMAGE_SCOPE_SIZE]
 
     test_set_x = columnized_images[0 : N, :]
     test_set_y = label_arr[0 : N]
@@ -122,9 +105,6 @@ if __name__ == '__main__':
 
     # Section 3
     ypred = []
-    # for index in range(N):
-    #     data = np.array([transformed_test_set_x[index], test_set_y[index]])
-    #     KNN(K, transformed_test_set_x, test_set_y, data)
 
     for x in transformed_test_set_x:
         ypred.append(KNN(K, transformed_training_set_x, training_set_y, x))
