@@ -23,6 +23,32 @@
                 "20",
                 "/Users/angel/Projects/Deep-Learning/code"
             ]
+        },
+        {
+            "name": "Entrance exam test 2",
+            "type": "python",
+            "request": "launch",
+            "program": "2211798052.py",
+            "console": "integratedTerminal",
+            "args": [
+                "5",
+                "15",
+                "40",
+                "/Users/angel/Projects/Deep-Learning/code"
+            ]
+        },
+        {
+            "name": "Entrance exam test 3",
+            "type": "python",
+            "request": "launch",
+            "program": "2211798052.py",
+            "console": "integratedTerminal",
+            "args": [
+                "5",
+                "15",
+                "100",
+                "/Users/angel/Projects/Deep-Learning/code"
+            ]
         }
     ]
 }
