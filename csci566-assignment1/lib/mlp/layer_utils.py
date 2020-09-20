@@ -142,10 +142,7 @@ class fc(object):
         assert len(feat.shape) == 2 and feat.shape[-1] == self.input_dim, \
             "But got {} and {}".format(feat.shape, self.input_dim)
 
-        if feat.shape[0] is not None:
-            f = feat.reshape(feat.shape[0], self.input_dim)
-        else:
-            f = feat.reshape(1,self.input_dim)
+        f = feat.reshape(-1, self.input_dim)
             
         output = f.dot(self.params[self.w_name]) + self.params[self.b_name].T
 
