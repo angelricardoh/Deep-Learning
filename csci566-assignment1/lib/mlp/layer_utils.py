@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-
+import pdb
 
 class sequential(object):
     def __init__(self, *args):
@@ -92,7 +92,6 @@ class flatten(object):
         output = None
 
         output = np.reshape(feat, (feat.shape[0], feat.shape[1] * feat.shape[2] * feat.shape[3]))
-        print(output.shape)
         self.meta = feat
         return output
 
@@ -106,7 +105,7 @@ class flatten(object):
         # You need to reshape (flatten) the input gradients and return.             #
         # Store the results in the variable dfeat provided above.                   #
         #############################################################################
-        pass
+        dfeat = np.reshape(feat, (feat.shape[0], feat.shape[1], feat.shape[2], feat.shape[3]))
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -165,7 +164,9 @@ class fc(object):
         # corresponding name.                                                       #
         # Store the output gradients in the variable dfeat provided above.          #
         #############################################################################
-        pass
+        self.grads[self.w_name] = (dprev.T @ feat).T
+        self.grads[self.b_name] = np.sum(dprev, axis = 0)
+        dfeat = dprev @ self.params[self.w_name].T
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
