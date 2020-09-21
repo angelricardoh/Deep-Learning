@@ -32,9 +32,9 @@ class Module(object):
 class TestFCReLU(Module):
     def __init__(self, keep_prob=0, dtype=np.float32, seed=None):
         self.net = sequential(
-            ########## TODO: ##########
-
-            ########### END ###########
+            flatten(name='flatten'),
+            fc(input_dim=20, output_dim=10),
+            relu(name='relu')
         )
 
 

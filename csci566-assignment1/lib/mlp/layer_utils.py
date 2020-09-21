@@ -91,7 +91,11 @@ class flatten(object):
     def forward(self, feat):
         output = None
 
-        output = np.reshape(feat, (feat.shape[0], feat.shape[1] * feat.shape[2] * feat.shape[3]))
+        dims = 1
+        for dim in feat.shape[1:]:
+            dims *= dim
+            
+        output = np.reshape(feat, (-1, dims))
         self.meta = feat
         return output
 
@@ -105,7 +109,7 @@ class flatten(object):
         # You need to reshape (flatten) the input gradients and return.             #
         # Store the results in the variable dfeat provided above.                   #
         #############################################################################
-        dfeat = np.reshape(feat, (feat.shape[0], feat.shape[1], feat.shape[2], feat.shape[3]))
+        dfeat = np.reshape(dprev, feat.shape)
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -193,7 +197,7 @@ class relu(object):
         # TODO: Implement the forward pass of a rectified linear unit               #
         # Store the results in the variable output provided above.                  #
         #############################################################################
-        pass
+        output = np.maximum(0, feat)
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -210,7 +214,9 @@ class relu(object):
         # TODO: Implement the backward pass of a rectified linear unit              #
         # Store the output gradients in the variable dfeat provided above.          #
         #############################################################################
-        pass
+        dydx = np.where(feat >= 0, 1, 0)
+        dfeat =  dprev * dydx
+        # Do we need to store grads in ReLu backward?
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -253,7 +259,14 @@ class dropout(object):
         # Store the mask in the variable kept provided above.                       #
         # Store the results in the variable output provided above.                  #
         #############################################################################
-        pass
+        if self.keep_prob:
+            kept = np.random.random_sample(feat.shape)
+            if self.is_training:
+                output = (kept * feat) / self.keep_prob
+            else:
+                output = (kept * feat)
+        else:
+            output = feat
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -272,7 +285,11 @@ class dropout(object):
         # Select gradients only from selected activations.                          #
         # Store the output gradients in the variable dfeat provided above.          #
         #############################################################################
-        pass
+        pdb.set_trace()
+        if self.is_training:
+            dfeat = (dprev * self.kept) / self.keep_prob
+        else:
+            dfeat = dprev
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
