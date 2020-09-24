@@ -4,6 +4,7 @@ from __future__ import print_function
 
 import numpy as np
 import pdb
+import copy
 
 class sequential(object):
     def __init__(self, *args):
@@ -259,14 +260,18 @@ class dropout(object):
         # Store the mask in the variable kept provided above.                       #
         # Store the results in the variable output provided above.                  #
         #############################################################################
-        if self.keep_prob:
-            kept = np.random.random_sample(feat.shape)
-            if self.is_training:
-                output = (kept * feat) / self.keep_prob
+        if self.keep_prob == 0:
+            self.keep_prob = 1
+
+        if is_training:
+            kept = (self.rng.random_sample(feat.shape) <= self.keep_prob).astype(int)
+            if self.keep_prob != 0:
+                output = feat * kept / self.keep_prob
             else:
-                output = (kept * feat)
+                output = feat * kept
         else:
             output = feat
+
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -285,7 +290,6 @@ class dropout(object):
         # Select gradients only from selected activations.                          #
         # Store the output gradients in the variable dfeat provided above.          #
         #############################################################################
-        pdb.set_trace()
         if self.is_training:
             dfeat = (dprev * self.kept) / self.keep_prob
         else:
@@ -316,7 +320,15 @@ class cross_entropy(object):
         # TODO: Implement the forward pass of an CE Loss                            #
         # Store the loss in the variable loss provided above.                       #
         #############################################################################
-        pass
+        k = len(label)
+        self.p_x = np.zeros_like(logit)
+        for i in range(k):
+            self.p_x[i, label[i]] = 1
+        # self.p_x[np.arange(len(label)), label] = 1
+        loss = -np.sum(self.p_x * np.log(logit), axis=1).mean()
+        # self.p_x = logit[range(k), label]
+        # likelihood = -np.log(self.p_x)
+        # loss = np.sum(likelihood) / k
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -334,7 +346,12 @@ class cross_entropy(object):
         # TODO: Implement the backward pass of an CE Loss                           #
         # Store the output gradients in the variable dlogit provided above.         #
         #############################################################################
-        pass
+        k = len(label)
+        dlogit = (logit - self.p_x) / k
+        # k = label.shape[0]
+        # dlogit = copy.deepcopy(logit)
+        # dlogit[range(k), label] -= 1
+        # dlogit /= k
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -350,7 +367,9 @@ def softmax(feat):
     # TODO: Implement the forward pass of a softmax function                    #
     # Return softmax values over the last dimension of feat.                    #
     #############################################################################
-    pass
+    feat_stable = feat - np.amin(feat, axis=1, keepdims=True)
+    scores = np.exp(feat_stable) / np.sum(np.exp(feat_stable), axis=1, keepdims=True)
+    # scores = np.exp(feat) / np.sum(np.exp(feat), axis=1)
     #############################################################################
     #                             END OF YOUR CODE                              #
     #############################################################################

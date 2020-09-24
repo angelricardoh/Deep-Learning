@@ -41,9 +41,10 @@ class TestFCReLU(Module):
 class SmallFullyConnectedNetwork(Module):
     def __init__(self, keep_prob=0, dtype=np.float32, seed=None):
         self.net = sequential(
-            ########## TODO: ##########
-
-            ########### END ###########
+            fc(input_dim=4, output_dim=30, name='sfcnfc1'),
+            relu(name='relu1'),
+            fc(input_dim=30, output_dim=7, name='sfcnfc2'),
+            relu(name='relu2')
         )
 
 
