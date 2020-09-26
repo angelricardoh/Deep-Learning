@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-
+import pdb
 
 """ Super Class """
 class Optimizer(object):
@@ -56,7 +56,14 @@ class SGDM(Optimizer):
         #############################################################################
         # TODO: Implement the SGD + Momentum                                        #
         #############################################################################
-        pass
+        # if len(self.velocity) == 0:
+        #     self.velocity = [0] * len(layer.params)
+        for n, dv in layer.grads.items():
+            if self.velocity.get(n) is None:
+                self.velocity[n] = 0
+            last_update = self.velocity[n]
+            self.velocity[n] = self.momentum * last_update - self.lr * dv
+            layer.params[n] += self.velocity[n]
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################

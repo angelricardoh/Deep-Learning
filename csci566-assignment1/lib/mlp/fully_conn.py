@@ -33,7 +33,7 @@ class TestFCReLU(Module):
     def __init__(self, keep_prob=0, dtype=np.float32, seed=None):
         self.net = sequential(
             flatten(name='flatten'),
-            fc(input_dim=20, output_dim=10),
+            fc(input_dim=5*4, output_dim=10),
             relu(name='relu')
         )
 
@@ -68,9 +68,10 @@ class TinyNet(Module):
     def __init__(self, keep_prob=0, dtype=np.float32, seed=None):
         """ Some comments """
         self.net = sequential(
-            ########## TODO: ##########
-
-            ########### END ###########
+            flatten(name='flatten'),
+            fc(input_dim=3072, output_dim=512, init_scale=0.003, name="fc1"),
+            relu(name='relu'),
+            fc(input_dim=512, output_dim=10, init_scale=0.003, name="fc2"),
         )
 
 
