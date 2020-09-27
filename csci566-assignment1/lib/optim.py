@@ -82,7 +82,14 @@ class RMSProp(Optimizer):
         #############################################################################
         # TODO: Implement the RMSProp                                               #
         #############################################################################
-        pass
+        for n, dv in layer.grads.items():
+            if self.cache.get(n) is None:
+                self.cache[n] = 0
+            squared_gradients = dv ** 2
+            past_decaying_avg_gradients = self.decay * self.cache[n] + (1 - self.decay) * squared_gradients
+            layer.params[n] += -(self.lr * dv) / np.sqrt(past_decaying_avg_gradients + self.eps)
+            self.cache[n] = past_decaying_avg_gradients
+
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -103,7 +110,17 @@ class Adam(Optimizer):
         #############################################################################
         # TODO: Implement the Adam                                                  #
         #############################################################################
-        pass
+        self.t += 1
+        for n, dv in layer.grads.items():
+            if self.mt.get(n) is None:
+                self.mt[n] = 0
+            if self.vt.get(n) is None:
+                self.vt[n] = 0
+            self.mt[n] = self.beta1 * self.mt[n] + ((1 - self.beta1) * dv)
+            self.vt[n] = self.beta2 * self.vt[n] + ((1 - self.beta2) * dv ** 2)
+            mt_hat = self.mt[n] / (1 - self.beta1 ** self.t)
+            vt_hat = self.vt[n] / (1 - self.beta2 ** self.t)
+            layer.params[n] += -(self.lr * mt_hat) / (np.sqrt(vt_hat) + self.eps)
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
