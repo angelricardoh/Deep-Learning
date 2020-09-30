@@ -181,8 +181,8 @@ def train_net(data, model, loss_func, optimizer, batch_size, max_epochs,
         # respectively                                                              #
         #############################################################################
 
-        train_acc = compute_acc(model, data_batch, labels_batch, None, len(labels_batch))
-        val_acc = compute_acc(model, data_val, labels_val, None, len(labels_val))
+        train_acc = compute_acc(model, data_train, labels_train)#, None, len(labels_batch))
+        val_acc = compute_acc(model, data_val, labels_val)#, None, len(labels_val))
 
         #############################################################################
         #                             END OF YOUR CODE                              #

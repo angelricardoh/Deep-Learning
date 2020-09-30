@@ -1,5 +1,5 @@
 import numpy as np
-
+import pdb
 
 def sigmoid(x):
     """
@@ -132,7 +132,12 @@ class VanillaRNN(object):
         # Store the results in the variable output provided above as well as       #
         # values needed for the backward pass.                                     #
         ############################################################################
-        pass
+        b = self.params[self.b_name]
+        W = self.params[self.wh_name]
+        U = self.params[self.wx_name]
+        a_t = b + prev_h @ W + x @ U
+        next_h = np.tanh(a_t)
+        meta = a_t, U, W, x, prev_h
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -155,7 +160,13 @@ class VanillaRNN(object):
         # Store the computed gradients for current layer in self.grads with         #
         # corresponding name.                                                       # 
         #############################################################################
-        pass
+        a_t, U, W, x, prev_h = meta
+        da = dnext_h * (1 - np.tanh(a_t) ** 2)
+        dWx = x.T @ da
+        dWh = prev_h.T @ da
+        db = np.sum(da, axis=0)
+        dx = da @ U.T
+        dprev_h = da @ W.T
         #############################################################################
         #                             END OF YOUR CODE                              #
         #############################################################################
@@ -173,10 +184,17 @@ class VanillaRNN(object):
         # input data. You should use the step_forward function that you defined      #
         # above. You can use a for loop to help compute the forward pass.            #
         ##############################################################################
-        pass
+        T = x.shape[1]
+        h = [h0]
+        for t in range(T):
+            h_step_forward, meta_step_forward = self.step_forward(x[:, t], h[len(h)-1])
+            h.append(h_step_forward)
+            self.meta.append(meta_step_forward)
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
+        h.pop(0)
+        h = np.moveaxis(h, 0, 1)
         return h
 
     def backward(self, dh):
