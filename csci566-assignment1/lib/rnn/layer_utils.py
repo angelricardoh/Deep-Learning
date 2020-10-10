@@ -190,11 +190,11 @@ class VanillaRNN(object):
             h_step_forward, meta_step_forward = self.step_forward(x[:, t], h[len(h)-1])
             h.append(h_step_forward)
             self.meta.append(meta_step_forward)
+        h.pop(0)
+        h = np.moveaxis(h, 0, 1)
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
-        h.pop(0)
-        h = np.moveaxis(h, 0, 1)
         return h
 
     def backward(self, dh):
@@ -217,7 +217,24 @@ class VanillaRNN(object):
         # defined above. You can use a for loop to help compute the backward pass.   #
         # HINT: Gradients of hidden states come from two sources                     #
         ##############################################################################
-        pass
+        dprev_h = 0
+        N, T, H = dh.shape
+        D = self.input_dim
+        # Initialization keeping the gradients with the same shape it's respective inputs/weights
+        dx, dprev_h = np.zeros((N, T, D)), np.zeros((N, H))
+        self.grads[self.wx_name], self.grads[self.wh_name], self.grads[self.b_name] = np.zeros((D, H)), np.zeros((H, H)), np.zeros((H,))
+
+        T = dh.shape[1]
+        for t in reversed(range(T)):
+            # dh[:,t,:] += dprev_h
+            dx_t, dprev_h, dWx, dWh, db = self.step_backward(dprev_h + dh[:,t], self.meta[t])
+            # pdb.set_trace()
+            dx[:,t] += dx_t
+            self.grads[self.wx_name] += dWx
+            self.grads[self.wh_name] += dWh
+            self.grads[self.b_name] += db
+        dh0 = dprev_h
+        # dh0.pop(0)
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
@@ -263,7 +280,16 @@ class LSTM(object):
         # TODO: Implement the forward pass for a single timestep of an LSTM.        #
         # You may want to use the numerically stable sigmoid implementation above.  #
         #############################################################################
-        pass
+        a = x @ self.params[self.wx_name] + prev_h @ self.params[self.wh_name] + self.params[self.b_name]
+
+        a_i = a[:,:1 * self.h_dim]
+        a_f = a[:,1 * self.h_dim : 2 * self.h_dim]
+        a_o = a[:,2 * self.h_dim : 3 * self.h_dim]
+        a_g = a[:,3 * self.h_dim : 4 * self.h_dim]
+
+        next_c = sigmoid(a_f) * prev_c + sigmoid(a_i) * np.tanh(a_g)
+        next_h = sigmoid(a_o) * np.tanh(next_c)
+        meta = x, prev_h, prev_c, a_i, a_f, a_o, a_g, next_h, next_c
         #############################################################################
         #                               END OF YOUR CODE                            #
         #############################################################################
@@ -287,7 +313,28 @@ class LSTM(object):
         # HINT: For sigmoid and tanh you can compute local derivatives in terms of  #
         # the output value of the nonlinearity.                                   #
         #############################################################################
-        pass
+        x, prev_h, prev_c, a_i, a_f, a_o, a_g, _, next_c = meta
+        Wx = self.params[self.wx_name]
+        Wh = self.params[self.wh_name]
+
+        dnext_c += dnext_h * sigmoid(a_o) * (1 - np.tanh(next_c) ** 2)
+        dprev_c = dnext_c * sigmoid(a_f) * 1
+
+        da_o = dnext_h * np.tanh(next_c) * sigmoid(a_o) * (1 - sigmoid(a_o))
+        da_i = dnext_c * np.tanh(a_g) * sigmoid(a_i) * (1 - sigmoid(a_i))
+        da_f = dnext_c * prev_c * sigmoid(a_f) * (1 - sigmoid(a_f))
+        da_g = dnext_c * sigmoid(a_i) * (1 - np.tanh(a_g) ** 2)
+        da = np.hstack((da_i, da_f, da_o, da_g))
+
+        dx = da @ Wx.T
+        dWx = x.T @ da
+        dprev_h = da @ Wh.T
+        dWh = prev_h.T @ da 
+        db = np.sum(da, 0)
+
+        # da_f = dnext_c * prev_c
+        # dprev_c = dnext_c * a_f
+        # da_g = dnext_c * a_i
         #############################################################################
         #                               END OF YOUR CODE                            #
         #############################################################################
@@ -325,7 +372,15 @@ class LSTM(object):
         # You should use the lstm_step_forward function that you just defined.      #
         # HINT: The initial cell state c0 should be set to zero.                    #
         #############################################################################
-        pass
+        T = x.shape[1]
+        h = [h0]
+        prev_c = 0
+        for t in range(T):
+            h_step_forward, prev_c, meta_step_forward = self.step_forward(x[:, t], h[len(h)-1], prev_c)
+            h.append(h_step_forward)
+            self.meta.append(meta_step_forward)
+        h.pop(0)
+        h = np.moveaxis(h, 0, 1)
         #############################################################################
         #                               END OF YOUR CODE                            #
         #############################################################################
@@ -352,7 +407,24 @@ class LSTM(object):
         # HINT: Again note that gradients of hidden states h come from two sources  #
         # HINT: The initial gradient of the cell state is zero.
         #############################################################################
-        pass
+        N, T, H = dh.shape
+        D = self.input_dim
+        # Initialization keeping the gradients with the same shape it's respective inputs/weights
+        dx, dh_t = np.zeros((N, T, D)), np.zeros((N, H))
+        dc_t = np.zeros((N, H))
+        self.grads[self.wx_name], self.grads[self.wh_name], self.grads[self.b_name] = np.zeros((D, 4 * H)), np.zeros((H, 4 * H)), np.zeros((4 * H,))
+
+        T = dh.shape[1]
+        for t in reversed(range(T)):
+            # dh[:,t,:] += dprev_h
+            dx_t, dh_t, dc_t, dWx_t, dWh_t, db_t = self.step_backward(dh_t + dh[:,t], dc_t, self.meta[t])
+            # pdb.set_trace()
+            dx[:,t] += dx_t
+            self.grads[self.wx_name] += dWx_t
+            self.grads[self.wh_name] += dWh_t
+            self.grads[self.b_name] += db_t
+        dh0 = dh_t
+        # dh0.pop(0)
         #############################################################################
         #                               END OF YOUR CODE                            #
         #############################################################################
@@ -402,7 +474,8 @@ class word_embedding(object):
         #                                                                            #
         # HINT: This can be done in one line using NumPy's array indexing.           #
         ##############################################################################
-        pass
+        self.meta = x
+        out = self.params[self.w_name][x]
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################
@@ -428,7 +501,10 @@ class word_embedding(object):
         # Note that Words can appear more than once in a sequence.                   #
         # HINT: Look up the function np.add.at                                       #
         ##############################################################################
-        pass
+        vd_shape = self.params[self.w_name].shape
+        dW = np.zeros_like(self.params[self.w_name], shape = vd_shape)
+        np.add.at(dW, self.meta, dout)
+        self.grads[self.w_name] = dW
         ##############################################################################
         #                               END OF YOUR CODE                             #
         ##############################################################################

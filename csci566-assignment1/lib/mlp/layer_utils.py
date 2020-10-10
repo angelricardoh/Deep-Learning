@@ -148,7 +148,7 @@ class fc(object):
 
         f = feat.reshape(-1, self.input_dim)
             
-        output = f.dot(self.params[self.w_name]) + self.params[self.b_name].T
+        output = f.dot(self.params[self.w_name]) + self.params[self.b_name]
 
         self.meta = feat
 
@@ -169,7 +169,7 @@ class fc(object):
         # corresponding name.                                                       #
         # Store the output gradients in the variable dfeat provided above.          #
         #############################################################################
-        self.grads[self.w_name] = (dprev.T @ feat).T
+        self.grads[self.w_name] = feat.T @ dprev
         self.grads[self.b_name] = np.sum(dprev, axis = 0)
         dfeat = dprev @ self.params[self.w_name].T
         #############################################################################
